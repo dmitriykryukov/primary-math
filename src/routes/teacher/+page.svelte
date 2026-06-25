@@ -65,16 +65,17 @@
 
     rows = await Promise.all((students as UserProfile[]).map(async (s) => {
       const [progressRes, streakRes] = await Promise.all([
-        supabase.from('student_progress').select('score, completed_at').eq('student_id', s.id),
+        supabase.from('student_progress').select('lesson_id, score, completed_at').eq('student_id', s.id),
         supabase.from('streaks').select('current_streak, last_practice_date').eq('student_id', s.id).maybeSingle()
       ]);
       const progress = progressRes.data ?? [];
       const scores = progress.map((p: any) => p.score as number);
       const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length / 20 * 100) : 0;
+      const lessonCount = new Set(progress.map((p: any) => p.lesson_id)).size;
       const lastActive = streakRes.data?.last_practice_date ?? null;
       return {
         profile: s,
-        lessonCount: progress.length,
+        lessonCount,
         avgScore,
         streak: streakRes.data?.current_streak ?? 0,
         lastActive

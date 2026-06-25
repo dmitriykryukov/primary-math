@@ -1,13 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { authStore } from '$lib/stores/auth';
   import { supabase } from '$lib/supabase';
-  import { lang } from '$lib/i18n/index';
+  import { t, lang } from '$lib/i18n/index';
   import type { Lesson, StudentProgress } from '$lib/types';
 
-  let student: { username: string; grade: number } | null = $state(null);
+  let student: { username: string; grade: number; teacher_id: string } | null = $state(null);
   let lessons: Lesson[] = $state([]);
   let progress: StudentProgress[] = $state([]);
   let loading = $state(true);
@@ -16,14 +16,19 @@
     const user = $authStore.user;
     if (!user || user.role === 'student') { goto('/'); return; }
 
-    const studentId = $page.params.id;
+    const studentId = page.params.id;
     const [sRes, pRes] = await Promise.all([
-      supabase.from('users').select('username, grade').eq('id', studentId).single(),
+      supabase.from('users').select('username, grade, teacher_id').eq('id', studentId).single(),
       supabase.from('student_progress').select('*').eq('student_id', studentId).order('completed_at')
     ]);
 
     student = sRes.data;
     progress = (pRes.data ?? []) as StudentProgress[];
+
+    if (student && user.role !== 'admin' && student.teacher_id !== user.id) {
+      goto('/teacher');
+      return;
+    }
 
     if (student) {
       const { data } = await supabase.from('lessons').select('*').eq('grade', student.grade).order('order_index');
@@ -44,8 +49,8 @@
   <p style="color:var(--muted);text-align:center;padding:40px">…</p>
 {:else if student}
   <div>
-    <button class="back-btn" onclick={() => goto('/teacher')}>← Back</button>
-    <h2>{student.username} — Grade {student.grade}</h2>
+    <button class="back-btn" onclick={() => goto('/teacher')}>{t('backToDashboard', $lang)}</button>
+    <h2>{student.username} — {t('grade', $lang)} {student.grade}</h2>
 
     <div class="lesson-list">
       {#each lessons as lesson}
@@ -65,6 +70,8 @@
       {/each}
     </div>
   </div>
+{:else if !loading}
+  <p style="color:var(--muted);text-align:center;padding:40px">Student not found.</p>
 {/if}
 
 <style>
