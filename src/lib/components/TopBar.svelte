@@ -20,7 +20,7 @@
       {$lang === 'en' ? 'FR' : 'EN'}
     </button>
     {#if $authStore.user}
-      <button class="logout" onclick={handleLogout}>{t('logout')}</button>
+      <button class="logout" onclick={handleLogout}>{t('logout', $lang)}</button>
     {/if}
   </div>
 </nav>

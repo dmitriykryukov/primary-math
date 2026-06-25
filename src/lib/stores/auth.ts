@@ -1,5 +1,5 @@
 // src/lib/stores/auth.ts
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import { supabase } from '$lib/supabase';
 import { setLang } from '$lib/i18n/index';
 import type { UserProfile } from '$lib/types';
@@ -27,6 +27,7 @@ export async function login(username: string, password: string) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw new Error('invalidCredentials');
   await loadSession();
+  if (!get(authStore).user) throw new Error('invalidCredentials');
 }
 
 export async function logout() {

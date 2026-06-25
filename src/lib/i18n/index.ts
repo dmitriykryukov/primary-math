@@ -8,8 +8,8 @@ const strings = { en, fr };
 
 export const lang = writable<Lang>('en');
 
-export function t(key: I18nKeys): string {
-  return strings[get(lang)][key] ?? key;
+export function t(key: I18nKeys, l?: Lang): string {
+  return strings[l ?? get(lang)][key] ?? key;
 }
 
 export function setLang(l: Lang) {

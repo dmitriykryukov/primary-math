@@ -2,14 +2,13 @@
   import { t, lang } from '$lib/i18n/index';
   import { login, authStore } from '$lib/stores/auth';
   import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
 
   let username = $state('');
   let password = $state('');
   let error = $state('');
   let loading = $state(false);
 
-  onMount(() => {
+  $effect(() => {
     if ($authStore.user) redirectByRole($authStore.user.role);
   });
 
@@ -26,7 +25,7 @@
       await login(username, password);
       redirectByRole($authStore.user!.role);
     } catch {
-      error = t('invalidCredentials');
+      error = t('invalidCredentials', $lang);
     } finally {
       loading = false;
     }
@@ -41,16 +40,16 @@
 
   <form onsubmit={handleSubmit}>
     <label>
-      {t('username')}
+      {t('username', $lang)}
       <input bind:value={username} type="text" autocomplete="username" required />
     </label>
     <label>
-      {t('password')}
+      {t('password', $lang)}
       <input bind:value={password} type="password" autocomplete="current-password" required />
     </label>
     {#if error}<p class="error">{error}</p>{/if}
     <button type="submit" disabled={loading} class="btn-primary">
-      {loading ? '…' : t('login')}
+      {loading ? '…' : t('login', $lang)}
     </button>
   </form>
 </div>
