@@ -45,4 +45,15 @@ describe('generateQuestions', () => {
     const qs = generateQuestions(makeLesson('frac_add_same_1'), 20);
     expect(qs[0].question_en).toContain('/');
   });
+
+  it('frac_compare multiple choice has no duplicate options', () => {
+    // Run many times to catch random duplicates
+    for (let i = 0; i < 50; i++) {
+      const qs = generateQuestions(makeLesson('frac_compare_1'), 20);
+      for (const q of qs.filter(q => q.type === 'multiple_choice')) {
+        const unique = new Set(q.options!);
+        expect(unique.size).toBe(4);
+      }
+    }
+  });
 });

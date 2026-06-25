@@ -25,7 +25,15 @@ function pickType(index: number, total: number): QuestionType {
 
 function makeMultChoiceOptions(correct: string, distractors: string[]): string[] {
   const unique = [...new Set([correct, ...distractors])].slice(0, 4);
-  while (unique.length < 4) unique.push(String(parseInt(correct) + unique.length));
+  while (unique.length < 4) {
+    const num = parseInt(correct);
+    if (!isNaN(num)) {
+      const candidate = String(num + unique.length);
+      if (!unique.includes(candidate)) unique.push(candidate);
+    } else {
+      break; // non-numeric answer, can't generate meaningful numeric distractors
+    }
+  }
   return shuffle(unique);
 }
 
@@ -134,14 +142,23 @@ export function generateQuestions(lesson: Lesson, count: number): Question[] {
       if (topic.includes('equiv')) {
         const d = dens[rand(0,4)]; const n = rand(1, d-1); const m = rand(2,4);
         const type = pickType(i, count);
-        const answer = `${n*m}/${d*m}`;
-        const dist = [`${n*m+1}/${d*m}`, `${n}/${d}`, `${n*m}/${d*m+1}`];
         qs.push({ id:`L${id}Q${i}`, lesson_id:id, type, question_en:`Find equivalent: ${n}/${d} = ?/${d*m}`, question_fr:`Trouver équivalent: ${n}/${d} = ?/${d*m}`, correct_answer: String(n*m), options: type==='multiple_choice' ? makeMultChoiceOptions(String(n*m), [String(n*m+1),String(n*m-1),String(n)]) : null });
       } else if (topic.includes('compare')) {
         const d = dens[rand(0,4)]; const n1 = rand(1,d-1); const n2 = rand(1,d-1);
         const type = pickType(i, count);
         const answer = n1 > n2 ? `${n1}/${d}` : (n1 < n2 ? `${n2}/${d}` : 'equal');
-        qs.push({ id:`L${id}Q${i}`, lesson_id:id, type, question_en:`Which is larger? ${n1}/${d} or ${n2}/${d}`, question_fr:`Laquelle est plus grande? ${n1}/${d} ou ${n2}/${d}`, correct_answer: answer, options: type==='multiple_choice' ? [answer, answer==='equal'?`${n1}/${d}`:'equal', `${Math.min(n1,n2)}/${d}`, `${Math.max(n1,n2)+1}/${d}`] : null });
+        let options: string[] | null = null;
+        if (type === 'multiple_choice') {
+          const opts = new Set([answer]);
+          const candidates = [
+            `${n1}/${d}`, `${n2}/${d}`, 'equal',
+            `${Math.min(n1,n2)+1}/${d}`, `${Math.max(n1,n2)+1}/${d}`,
+            `${Math.max(n1,n2)+2}/${d}`, `${Math.max(n1,n2)+3}/${d}`
+          ];
+          for (const c of candidates) { if (opts.size < 4) opts.add(c); }
+          options = shuffle([...opts]);
+        }
+        qs.push({ id:`L${id}Q${i}`, lesson_id:id, type, question_en:`Which is larger? ${n1}/${d} or ${n2}/${d}`, question_fr:`Laquelle est plus grande? ${n1}/${d} ou ${n2}/${d}`, correct_answer: answer, options });
       } else if (topic.includes('add_same')) {
         const d = dens[rand(0,4)]; const n1 = rand(1,d); const n2 = rand(1,d);
         qs.push(fracQuestion(n1,d,n2,d,'+',i,id,count));
