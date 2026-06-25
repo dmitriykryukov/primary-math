@@ -1,11 +1,52 @@
-// Server-side API route for admin user management (create / delete)
+// Server-side API route for admin user management (create / delete / list)
 import { json, error } from '@sveltejs/kit';
+import { createClient } from '@supabase/supabase-js';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 import { supabaseAdmin } from '$lib/server/supabaseAdmin';
-import { supabase } from '$lib/supabase';
 import type { RequestHandler } from './$types';
+
+// Verify the caller is an authenticated admin before any operation.
+// Returns a Response (401/403) if not authorized, or null if authorized.
+async function requireAdmin(request: Request): Promise<Response | null> {
+  const cookie = request.headers.get('cookie') ?? '';
+  const anonClient = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+    global: { headers: { cookie } }
+  });
+
+  const { data: { user } } = await anonClient.auth.getUser();
+  if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: profile } = await anonClient
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
+  return null; // authorized
+}
+
+// GET /admin/api/users — list all teachers and students
+export const GET: RequestHandler = async ({ request }) => {
+  const authError = await requireAdmin(request);
+  if (authError) return authError;
+
+  const [tRes, sRes] = await Promise.all([
+    supabaseAdmin.from('users').select('*').eq('role', 'teacher').order('username'),
+    supabaseAdmin.from('users').select('*').eq('role', 'student').order('username')
+  ]);
+
+  return json({
+    teachers: tRes.data ?? [],
+    students: sRes.data ?? []
+  });
+};
 
 // POST /admin/api/users — create a user
 export const POST: RequestHandler = async ({ request }) => {
+  const authError = await requireAdmin(request);
+  if (authError) return authError;
+
   const body = await request.json();
   const { username, password, role, grade, teacher_id } = body;
 
@@ -53,6 +94,9 @@ export const POST: RequestHandler = async ({ request }) => {
 
 // DELETE /admin/api/users — delete a user by id
 export const DELETE: RequestHandler = async ({ request }) => {
+  const authError = await requireAdmin(request);
+  if (authError) return authError;
+
   const { id, role } = await request.json();
 
   if (!id) throw error(400, 'Missing user id');

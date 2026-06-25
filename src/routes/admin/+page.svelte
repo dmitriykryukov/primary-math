@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { authStore } from '$lib/stores/auth';
-  import { supabase } from '$lib/supabase';
   import { t, lang } from '$lib/i18n/index';
   import type { UserProfile } from '$lib/types';
 
@@ -29,12 +28,11 @@
   });
 
   async function loadUsers() {
-    const [tRes, sRes] = await Promise.all([
-      supabase.from('users').select('*').eq('role', 'teacher').order('username'),
-      supabase.from('users').select('*').eq('role', 'student').order('username')
-    ]);
-    teachers = (tRes.data ?? []) as UserProfile[];
-    students = (sRes.data ?? []) as UserProfile[];
+    const res = await fetch('/admin/api/users');
+    if (!res.ok) return;
+    const data = await res.json();
+    teachers = (data.teachers ?? []) as UserProfile[];
+    students = (data.students ?? []) as UserProfile[];
   }
 
   async function createUser() {
@@ -74,7 +72,7 @@
 
   async function deleteUser(user: UserProfile) {
     if (user.role === 'admin') return;
-    if (!confirm(`Delete "${user.username}"?`)) return;
+    if (!confirm(t('confirmDelete', $lang).replace('{name}', user.username))) return;
 
     const res = await fetch('/admin/api/users', {
       method: 'DELETE',
@@ -106,24 +104,24 @@
     </div>
     <div class="form-row">
       <label>
-        Role
+        {t('roleLabel', $lang)}
         <select bind:value={newRole}>
-          <option value="student">Student</option>
-          <option value="teacher">Teacher</option>
+          <option value="student">{t('student', $lang)}</option>
+          <option value="teacher">{t('teacher', $lang)}</option>
         </select>
       </label>
       {#if newRole === 'student'}
         <label>
-          {t('grade', $lang)}
+          {t('gradeLabel', $lang)}
           <select bind:value={newGrade}>
-            <option value={5}>Grade 5</option>
-            <option value={6}>Grade 6</option>
+            <option value={5}>{t('grade5', $lang)}</option>
+            <option value={6}>{t('grade6', $lang)}</option>
           </select>
         </label>
         <label>
-          Teacher
+          {t('assignTeacher', $lang)}
           <select bind:value={newTeacherId}>
-            <option value="">— None —</option>
+            <option value="">{t('noneOption', $lang)}</option>
             {#each teachers as teacher}
               <option value={teacher.id}>{teacher.username}</option>
             {/each}
@@ -140,7 +138,7 @@
       onclick={createUser}
       disabled={loading || !newUsername || !newPassword}
     >
-      {loading ? '…' : t('createUser', $lang)}
+      {loading ? t('creating', $lang) : t('createUser', $lang)}
     </button>
   </div>
 
@@ -168,7 +166,7 @@
       {#each students as user}
         <div class="user-row">
           <span class="uname">{user.username}</span>
-          <span class="grade-tag">Grade {user.grade}</span>
+          <span class="grade-tag">{user.grade === 6 ? t('grade6', $lang) : t('grade5', $lang)}</span>
           <button class="del-btn" onclick={() => deleteUser(user)}>{t('deleteUser', $lang)}</button>
         </div>
       {/each}
@@ -269,7 +267,7 @@
     padding: 4px 12px;
     font-size: 12px;
     cursor: pointer;
-    min-height: 36px;
+    min-height: 44px;
     white-space: nowrap;
   }
   .del-btn:hover { background: var(--danger); color: #fff; }
