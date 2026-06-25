@@ -1,11 +1,11 @@
 <script lang="ts">
-  let { total, current, answers, skipped, correct, wrong } = $props<{
+  let { total, current, skipped, correct, wrong, onJump } = $props<{
     total: number;
     current: number;
-    answers: Record<string, string>;
     skipped: Set<number>;
     correct: Set<number>;
     wrong: Set<number>;
+    onJump?: (i: number) => void;
   }>();
 
   function dotColor(i: number): string {
@@ -19,7 +19,16 @@
 
 <div class="dots">
   {#each Array(total) as _, i}
-    <div class="dot {dotColor(i)}" title={`Q${i+1}`}></div>
+    {#if onJump}
+      <button
+        class="dot {dotColor(i)}"
+        title={`Q${i+1}`}
+        onclick={() => onJump(i)}
+        onkeydown={(e) => e.key === 'Enter' && onJump(i)}
+      ></button>
+    {:else}
+      <div class="dot {dotColor(i)}" title={`Q${i+1}`}></div>
+    {/if}
   {/each}
 </div>
 
@@ -28,10 +37,12 @@
   .dot {
     width: 12px; height: 12px; border-radius: 50%;
     background: var(--surface); transition: background 0.2s;
+    border: none; padding: 0; cursor: default;
   }
   .dot.correct { background: var(--accent); }
   .dot.wrong { background: var(--danger); }
   .dot.skipped { background: var(--warn); }
   .dot.current { background: var(--surface); border: 2px solid var(--accent); }
   .dot.empty { background: var(--surface); }
+  button.dot { cursor: pointer; }
 </style>

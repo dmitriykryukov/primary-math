@@ -20,7 +20,6 @@
   let q = $derived(data.questions[current]);
   let isTyped = $derived(q?.type === 'typed');
   let totalAnswered = $derived(Object.keys(answers).length);
-  let allDone = $derived(totalAnswered === data.questions.length);
 
   function confirm() {
     const val = isTyped ? typedInput.trim() : (selected ?? '');
@@ -40,6 +39,8 @@
 
   function skip() {
     skipped = new Set([...skipped, current]);
+    selected = null;
+    typedInput = '';
     advance();
   }
 
@@ -68,15 +69,15 @@
     const score = data.questions.filter(q => answers[q.id]?.trim() === q.correct_answer.trim()).length;
     const user = $authStore.user!;
 
-    await supabase.from('student_progress').insert({
-      student_id: user.id,
-      lesson_id: data.lesson.id,
-      score,
-      answers
-    });
-
-    // Update streak
-    await updateStreak(user.id);
+    await Promise.all([
+      supabase.from('student_progress').insert({
+        student_id: user.id,
+        lesson_id: data.lesson.id,
+        score,
+        answers
+      }),
+      updateStreak(user.id)
+    ]);
 
     // Award badge if score >= 15
     if (score >= 15) {
@@ -135,10 +136,10 @@
   <ProgressDots
     total={data.questions.length}
     {current}
-    {answers}
     {skipped}
     {correct}
     {wrong}
+    onJump={jumpTo}
   />
 
   <div class="question-card">
