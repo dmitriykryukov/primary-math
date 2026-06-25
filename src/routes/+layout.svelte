@@ -1,12 +1,30 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
-	import '../app.css';
+  import '../app.css';
+  import TopBar from '$lib/components/TopBar.svelte';
+  import { authStore, loadSession } from '$lib/stores/auth';
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+  import { page } from '$app/stores';
 
-	let { children } = $props();
+  let { children } = $props();
+
+  onMount(async () => {
+    await loadSession();
+    const path = $page.url.pathname;
+    const user = $authStore.user;
+    if (!user && path !== '/') goto('/');
+  });
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+  <link rel="icon" href="/favicon.svg" />
 </svelte:head>
 
-{@render children()}
+<TopBar />
+<main>
+  {@render children()}
+</main>
+
+<style>
+  main { max-width: 800px; margin: 0 auto; padding: 20px 16px; }
+</style>
