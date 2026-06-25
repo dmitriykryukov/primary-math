@@ -13,29 +13,31 @@
   let loading = $state(true);
 
   onMount(async () => {
-    const user = $authStore.user;
-    if (!user || user.role === 'student') { goto('/'); return; }
+    try {
+      const user = $authStore.user;
+      if (!user || user.role === 'student') { goto('/'); return; }
 
-    const studentId = page.params.id;
-    const [sRes, pRes] = await Promise.all([
-      supabase.from('users').select('username, grade, teacher_id').eq('id', studentId).single(),
-      supabase.from('student_progress').select('*').eq('student_id', studentId).order('completed_at')
-    ]);
+      const studentId = page.params.id;
+      const [sRes, pRes] = await Promise.all([
+        supabase.from('users').select('username, grade, teacher_id').eq('id', studentId).single(),
+        supabase.from('student_progress').select('*').eq('student_id', studentId).order('completed_at')
+      ]);
 
-    student = sRes.data;
-    progress = (pRes.data ?? []) as StudentProgress[];
+      student = sRes.data;
+      progress = (pRes.data ?? []) as StudentProgress[];
 
-    if (student && user.role !== 'admin' && student.teacher_id !== user.id) {
-      goto('/teacher');
-      return;
+      if (student && user.role !== 'admin' && student.teacher_id !== user.id) {
+        goto('/teacher');
+        return;
+      }
+
+      if (student) {
+        const { data } = await supabase.from('lessons').select('*').eq('grade', student.grade).order('order_index');
+        lessons = (data ?? []) as Lesson[];
+      }
+    } finally {
+      loading = false;
     }
-
-    if (student) {
-      const { data } = await supabase.from('lessons').select('*').eq('grade', student.grade).order('order_index');
-      lessons = (data ?? []) as Lesson[];
-    }
-
-    loading = false;
   });
 
   function getProgress(lessonId: number) {
@@ -70,7 +72,7 @@
       {/each}
     </div>
   </div>
-{:else if !loading}
+{:else}
   <p style="color:var(--muted);text-align:center;padding:40px">Student not found.</p>
 {/if}
 

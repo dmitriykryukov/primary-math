@@ -32,7 +32,7 @@ export const fr: Record<I18nKeys, string> = {
   lastActive: 'Dernière activité',
   today: 'Aujourd\'hui',
   yesterday: 'Hier',
-  daysAgo: 'jours',
+  daysAgo: 'jours passés',
   addStudent: '+ Ajouter un élève',
   addTeacher: '+ Ajouter un enseignant',
   students: 'Élèves',

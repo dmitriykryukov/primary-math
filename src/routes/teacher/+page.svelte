@@ -95,7 +95,6 @@
         <h2>{$authStore.user?.username}</h2>
         <p class="subtitle">{rows.length} {t('students', $lang)}</p>
       </div>
-      <button class="btn-add" onclick={() => goto('/admin')}>{t('addStudent', $lang)}</button>
     </div>
 
     <div class="stats-row">
@@ -132,11 +131,7 @@
   .header-row { display: flex; justify-content: space-between; align-items: flex-start; }
   h2 { font-size: 22px; font-weight: 900; }
   .subtitle { color: var(--muted); font-size: 13px; }
-  .btn-add {
-    background: var(--surface); color: var(--accent); border: 1px solid var(--primary);
-    border-radius: 999px; padding: 8px 16px; font-size: 13px; min-height: 44px; cursor: pointer;
-  }
-  .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   .stat {
     background: var(--surface); border-radius: var(--radius);
     padding: 12px; text-align: center; display: flex;
