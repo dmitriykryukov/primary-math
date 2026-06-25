@@ -1,0 +1,25 @@
+/* src/app.css */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0f1729;
+  --surface:  #1a2744;
+  --primary:  #4361EE;
+  --accent:   #4CC9F0;
+  --warn:     #FFD93D;
+  --danger:   #FF6B35;
+  --success:  #6BCB77;
+  --text:     #ffffff;
+  --muted:    #8899bb;
+  --radius:   14px;
+  --radius-lg: 20px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+button, [role="button"] { min-height: 44px; min-width: 44px; cursor: pointer; }
