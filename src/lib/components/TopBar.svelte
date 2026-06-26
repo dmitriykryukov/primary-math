@@ -25,8 +25,20 @@
 </nav>
 
 {#if showModal}
-  <div class="overlay" onclick={() => showModal = false}>
-    <div class="modal" onclick={(e) => e.stopPropagation()}>
+  <div
+    class="overlay"
+    role="presentation"
+    onclick={() => showModal = false}
+    onkeydown={(e) => e.key === 'Escape' && (showModal = false)}
+  >
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      tabindex="-1"
+      onclick={(e) => e.stopPropagation()}
+      onkeydown={(e) => e.stopPropagation()}
+    >
       <p>{t("logoutConfirm", $lang)}</p>
       <div class="modal-actions">
         <button class="btn-cancel" onclick={() => showModal = false}>{t("logoutCancel", $lang)}</button>
