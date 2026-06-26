@@ -4,6 +4,9 @@
   import { goto } from "$app/navigation"
 
   let showModal = $state(false);
+  let modalEl = $state<HTMLElement | null>(null);
+
+  $effect(() => { if (showModal) modalEl?.focus(); });
 
   async function handleLogout() {
     showModal = false;
@@ -36,8 +39,9 @@
       role="dialog"
       aria-modal="true"
       tabindex="-1"
+      bind:this={modalEl}
       onclick={(e) => e.stopPropagation()}
-      onkeydown={(e) => e.stopPropagation()}
+      onkeydown={(e) => { if (e.key === 'Escape') showModal = false; else e.stopPropagation(); }}
     >
       <p>{t("logoutConfirm", $lang)}</p>
       <div class="modal-actions">
