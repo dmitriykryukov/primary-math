@@ -30,7 +30,8 @@
     ]);
 
     lessons = (lessonsRes.data ?? []) as Lesson[];
-    completedLessonIds = (progressRes.data ?? []).map((p: any) => p.lesson_id);
+    // Deduplicate by lesson_id so retries don't inflate the completed count
+    completedLessonIds = [...new Set((progressRes.data ?? []).map((p: any) => p.lesson_id))];
     streak = (streakRes.data as Streak) ?? streak;
     badgeCount = (badgesRes.data ?? []).length;
 
@@ -45,14 +46,16 @@
       if (classmates) {
         const entries: LeaderboardEntry[] = await Promise.all(
           classmates.map(async (cm: any) => {
-            const { count } = await supabase
+            // Fetch lesson_id values and deduplicate so retries don't inflate the count
+            const { data: progressRows } = await supabase
               .from('student_progress')
-              .select('*', { count: 'exact', head: true })
+              .select('lesson_id')
               .eq('student_id', cm.id);
+            const distinctCount = new Set((progressRows ?? []).map((r: any) => r.lesson_id)).size;
             return {
               username: cm.username,
               student_id: cm.id,
-              lessons_completed: count ?? 0,
+              lessons_completed: distinctCount,
               is_self: cm.id === user!.id
             };
           })

@@ -1,6 +1,6 @@
 <!-- src/routes/lesson/[id]/score/+page.svelte -->
 <script lang="ts">
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { t, lang } from '$lib/i18n/index';
   import ScoreRing from '$lib/components/ScoreRing.svelte';
@@ -8,9 +8,9 @@
   import { authStore } from '$lib/stores/auth';
   import { onMount } from 'svelte';
 
-  let score = $derived(parseInt($page.url.searchParams.get('score') ?? '0'));
-  let badgeEarned = $derived($page.url.searchParams.get('badge') === 'true');
-  let lessonId = $derived($page.params.id);
+  let score = $derived(parseInt(page.url.searchParams.get('score') ?? '0'));
+  let badgeEarned = $derived(page.url.searchParams.get('badge') === 'true');
+  let lessonId = $derived(page.params.id);
   let great = $derived(score >= 15);
   let toEarnBadge = $derived(15 - score);
 

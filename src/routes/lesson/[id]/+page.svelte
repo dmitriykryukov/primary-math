@@ -79,12 +79,12 @@
       updateStreak(user.id)
     ]);
 
-    // Award badge if score >= 15
+    // Award badge if score >= 15; use explicit conflict target to avoid duplicate inserts on retry
     if (score >= 15) {
-      await supabase.from('badges').upsert({
-        student_id: user.id,
-        lesson_id: data.lesson.id
-      });
+      await supabase.from('badges').upsert(
+        { student_id: user.id, lesson_id: data.lesson.id, earned_at: new Date().toISOString() },
+        { onConflict: 'student_id,lesson_id', ignoreDuplicates: true }
+      );
     }
 
     goto(`/lesson/${data.lesson.id}/score?score=${score}&badge=${score >= 15}`);

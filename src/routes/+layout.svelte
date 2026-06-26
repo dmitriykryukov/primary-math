@@ -4,13 +4,13 @@
   import { authStore, loadSession } from '$lib/stores/auth';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
 
   let { children } = $props();
 
   onMount(async () => {
     await loadSession();
-    const path = $page.url.pathname;
+    const path = page.url.pathname;
     const user = $authStore.user;
     if (!user && path !== '/') goto('/');
   });

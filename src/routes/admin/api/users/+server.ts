@@ -1,22 +1,21 @@
 // Server-side API route for admin user management (create / delete / list)
 import { json, error } from '@sveltejs/kit';
-import { createClient } from '@supabase/supabase-js';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 import { supabaseAdmin } from '$lib/server/supabaseAdmin';
 import type { RequestHandler } from './$types';
 
 // Verify the caller is an authenticated admin before any operation.
 // Returns a Response (401/403) if not authorized, or null if authorized.
+// Reads the Bearer token from the Authorization header (client stores session in
+// localStorage, not cookies, so cookie-based auth does not work here).
 async function requireAdmin(request: Request): Promise<Response | null> {
-  const cookie = request.headers.get('cookie') ?? '';
-  const anonClient = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
-    global: { headers: { cookie } }
-  });
+  const authHeader = request.headers.get('authorization') ?? '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: { user } } = await anonClient.auth.getUser();
-  if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+  if (error || !user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: profile } = await anonClient
+  const { data: profile } = await supabaseAdmin
     .from('users')
     .select('role')
     .eq('id', user.id)

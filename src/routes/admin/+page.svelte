@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { authStore } from '$lib/stores/auth';
+  import { supabase } from '$lib/supabase';
   import { t, lang } from '$lib/i18n/index';
   import type { UserProfile } from '$lib/types';
 
@@ -28,7 +29,11 @@
   });
 
   async function loadUsers() {
-    const res = await fetch('/admin/api/users');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token ?? '';
+    const res = await fetch('/admin/api/users', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
     if (!res.ok) return;
     const data = await res.json();
     teachers = (data.teachers ?? []) as UserProfile[];
@@ -40,9 +45,14 @@
     formSuccess = '';
     loading = true;
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token ?? '';
       const res = await fetch('/admin/api/users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           username: newUsername,
           password: newPassword,
@@ -74,9 +84,14 @@
     if (user.role === 'admin') return;
     if (!confirm(t('confirmDelete', $lang).replace('{name}', user.username))) return;
 
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token ?? '';
     const res = await fetch('/admin/api/users', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({ id: user.id, role: user.role })
     });
 
