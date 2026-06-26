@@ -1,38 +1,44 @@
 // Server-side API route for admin user management (create / delete / list)
 import { json, error } from '@sveltejs/kit';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 import { supabaseAdmin } from '$lib/server/supabaseAdmin';
 import type { RequestHandler } from './$types';
 
-// Verify the caller is an authenticated admin before any operation.
-// Returns a Response (401/403) if not authorized, or null if authorized.
-// Reads the Bearer token from the Authorization header (client stores session in
-// localStorage, not cookies, so cookie-based auth does not work here).
-async function requireAdmin(request: Request): Promise<Response | null> {
+// Returns { client } if the caller is an authenticated admin, or a Response (401/403).
+// The returned client uses the caller's JWT so DB operations respect the authenticated role.
+async function requireAdmin(request: Request): Promise<{ client: SupabaseClient } | Response> {
   const authHeader = request.headers.get('authorization') ?? '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
   if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  const userClient = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { autoRefreshToken: false, persistSession: false }
+  });
 
-  const { data: profile } = await supabaseAdmin
+  const { data: { user }, error: userError } = await userClient.auth.getUser();
+  if (userError || !user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: profile } = await userClient
     .from('users')
     .select('role')
     .eq('id', user.id)
     .single();
 
   if (profile?.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
-  return null; // authorized
+  return { client: userClient };
 }
 
 // GET /admin/api/users — list all teachers and students
 export const GET: RequestHandler = async ({ request }) => {
-  const authError = await requireAdmin(request);
-  if (authError) return authError;
+  const result = await requireAdmin(request);
+  if (result instanceof Response) return result;
+  const { client } = result;
 
   const [tRes, sRes] = await Promise.all([
-    supabaseAdmin.from('users').select('*').eq('role', 'teacher').order('username'),
-    supabaseAdmin.from('users').select('*').eq('role', 'student').order('username')
+    client.from('users').select('*').eq('role', 'teacher').order('username'),
+    client.from('users').select('*').eq('role', 'student').order('username')
   ]);
 
   return json({
@@ -43,8 +49,9 @@ export const GET: RequestHandler = async ({ request }) => {
 
 // POST /admin/api/users — create a user
 export const POST: RequestHandler = async ({ request }) => {
-  const authError = await requireAdmin(request);
-  if (authError) return authError;
+  const result = await requireAdmin(request);
+  if (result instanceof Response) return result;
+  const { client } = result;
 
   const body = await request.json();
   const { username, password, role, grade, teacher_id } = body;
@@ -55,7 +62,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
   const email = `${username}@mathprimaire.local`;
 
-  // Create auth user via admin API
+  // Create auth user via admin API (requires service role)
   const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
     email,
     password,
@@ -69,7 +76,7 @@ export const POST: RequestHandler = async ({ request }) => {
     throw error(409, msg);
   }
 
-  // Create public profile
+  // Insert public profile using the caller's authenticated session
   const profile: Record<string, unknown> = {
     id: authData.user.id,
     username,
@@ -81,7 +88,7 @@ export const POST: RequestHandler = async ({ request }) => {
     if (teacher_id) profile.teacher_id = teacher_id;
   }
 
-  const { error: profileErr } = await supabaseAdmin.from('users').insert(profile);
+  const { error: profileErr } = await client.from('users').insert(profile);
   if (profileErr) {
     // Roll back auth user if profile insert fails
     await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
@@ -93,18 +100,16 @@ export const POST: RequestHandler = async ({ request }) => {
 
 // DELETE /admin/api/users — delete a user by id
 export const DELETE: RequestHandler = async ({ request }) => {
-  const authError = await requireAdmin(request);
-  if (authError) return authError;
+  const result = await requireAdmin(request);
+  if (result instanceof Response) return result;
 
   const { id, role } = await request.json();
 
   if (!id) throw error(400, 'Missing user id');
   if (role === 'admin') throw error(403, 'Cannot delete admin');
 
-  // Delete profile first (FK constraint), then auth user
-  await supabaseAdmin.from('users').delete().eq('id', id);
+  // Deleting the auth user cascades to public.users via ON DELETE CASCADE
   const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(id);
-
   if (authErr) throw error(500, authErr.message);
 
   return json({ ok: true });

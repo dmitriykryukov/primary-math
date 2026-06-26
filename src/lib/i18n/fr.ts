@@ -52,6 +52,8 @@ export const fr: Record<I18nKeys, string> = {
   teachers: 'Enseignants',
   confirmDelete: 'Supprimer "{name}" ?',
   creating: 'Création…',
+  logoutConfirm: 'Êtes-vous sûr de vouloir vous déconnecter ?',
+  logoutCancel: 'Annuler',
   invalidCredentials: 'Nom d\'utilisateur ou mot de passe invalide.',
   usernameExists: 'Ce nom d\'utilisateur est déjà pris.',
 };

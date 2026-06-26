@@ -129,9 +129,9 @@
 </script>
 
 <div class="exercise">
-  <div class="lesson-title">{$lang === 'en' ? data.lesson.title_en : data.lesson.title_fr}</div>
-  <div class="progress-info">
-    <span>{t('question', $lang)} {current + 1} {t('of', $lang)} {data.questions.length}</span>
+  <div class="top-row">
+    <span class="lesson-title">{$lang === 'en' ? data.lesson.title_en : data.lesson.title_fr}</span>
+    <span class="progress-info">{current + 1} / {data.questions.length}</span>
   </div>
   <ProgressDots
     total={data.questions.length}
@@ -176,44 +176,53 @@
 </div>
 
 <style>
-  .exercise { display: flex; flex-direction: column; gap: 16px; }
-  .lesson-title { font-size: 13px; color: var(--accent); font-weight: 700; }
+  :global(main:has(.exercise)) { padding: 12px 16px; }
+
+  .exercise {
+    display: flex; flex-direction: column; gap: 8px;
+    height: calc(100dvh - 76px); overflow: hidden;
+  }
+  .top-row {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .lesson-title { font-size: 12px; color: var(--accent); font-weight: 700; }
   .progress-info { font-size: 12px; color: var(--muted); }
   .question-card {
     background: var(--surface); border-radius: var(--radius-lg);
-    padding: 32px 20px; text-align: center; min-height: 120px;
+    padding: 16px 20px; text-align: center;
     display: flex; align-items: center; justify-content: center;
+    flex: 1; min-height: 0; max-height: 160px;
   }
-  .question-text { font-size: 36px; font-weight: 900; letter-spacing: 2px; }
+  .question-text { font-size: 30px; font-weight: 900; letter-spacing: 2px; }
   .typed-display {
     background: var(--surface); border: 2px solid var(--primary);
-    border-radius: var(--radius); padding: 16px; text-align: center;
-    font-size: 32px; font-weight: 800; color: var(--accent); letter-spacing: 4px;
+    border-radius: var(--radius); padding: 10px 16px; text-align: center;
+    font-size: 26px; font-weight: 800; color: var(--accent); letter-spacing: 4px;
   }
-  .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .num-key {
     background: var(--surface); color: var(--text); border: none;
-    border-radius: var(--radius); font-size: 22px; font-weight: 700;
-    min-height: 56px; cursor: pointer;
+    border-radius: var(--radius); font-size: 20px; font-weight: 700;
+    min-height: 48px; cursor: pointer;
   }
   .num-key:hover { background: var(--primary); }
-  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .choice {
     background: var(--surface); color: var(--text); border: 2px solid var(--surface);
-    border-radius: var(--radius); font-size: 24px; font-weight: 800;
-    min-height: 64px; cursor: pointer;
+    border-radius: var(--radius); font-size: 22px; font-weight: 800;
+    min-height: 56px; cursor: pointer;
   }
   .choice.chosen { border-color: var(--accent); color: var(--accent); }
   .choice:hover { border-color: var(--primary); }
   .btn-confirm {
     background: linear-gradient(135deg, var(--primary), var(--accent));
     color: white; border: none; border-radius: var(--radius);
-    padding: 16px; font-size: 16px; font-weight: 700; min-height: 52px;
+    padding: 12px; font-size: 15px; font-weight: 700; min-height: 48px;
     cursor: pointer;
   }
   .btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
   .skip-btn {
     background: none; border: none; color: var(--muted);
-    text-decoration: underline; font-size: 14px; min-height: 44px; cursor: pointer;
+    text-decoration: underline; font-size: 13px; min-height: 36px; cursor: pointer;
   }
 </style>

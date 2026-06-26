@@ -14,6 +14,7 @@
 
   function redirectByRole(role: string) {
     if (role === 'student') goto('/dashboard');
+    else if (role === 'admin') goto('/admin');
     else goto('/teacher');
   }
 

@@ -45,8 +45,8 @@
   .dot.current { background: var(--surface); border: 2px solid var(--accent); }
   .dot.empty { background: var(--surface); }
   button.dot {
-    min-width: 44px;
-    min-height: 44px;
+    min-width: 26px;
+    min-height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;

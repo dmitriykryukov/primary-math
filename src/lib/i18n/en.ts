@@ -57,6 +57,8 @@ export const en = {
   teachers: 'Teachers',
   confirmDelete: 'Delete "{name}"?',
   creating: 'Creating…',
+  logoutConfirm: 'Are you sure you want to log out?',
+  logoutCancel: 'Cancel',
   // Errors
   invalidCredentials: 'Invalid username or password.',
   usernameExists: 'Username already taken.',
