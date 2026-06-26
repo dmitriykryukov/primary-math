@@ -20,11 +20,14 @@
   <link rel="icon" href="/favicon.ico" />
 </svelte:head>
 
-<TopBar />
-<main>
+{#if page.url.pathname !== '/'}
+  <TopBar />
+{/if}
+<main class:login-main={page.url.pathname === '/'}>
   {@render children()}
 </main>
 
 <style>
   main { max-width: 800px; margin: 0 auto; padding: 20px 16px; }
+  main.login-main { max-width: 100%; padding: 0; margin: 0; }
 </style>
