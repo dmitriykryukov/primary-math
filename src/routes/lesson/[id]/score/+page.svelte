@@ -9,10 +9,12 @@
   import { onMount } from 'svelte';
 
   let score = $derived(parseInt(page.url.searchParams.get('score') ?? '0'));
+  let total = $derived(parseInt(page.url.searchParams.get('total') ?? '20'));
   let badgeEarned = $derived(page.url.searchParams.get('badge') === 'true');
   let lessonId = $derived(page.params.id);
-  let great = $derived(score >= 15);
-  let toEarnBadge = $derived(15 - score);
+  let badgeThreshold = $derived(Math.round(total * 0.75));
+  let great = $derived(score >= badgeThreshold);
+  let toEarnBadge = $derived(badgeThreshold - score);
 
   let streak = $state(0);
 
@@ -35,7 +37,7 @@
   <div class="emoji">{great ? '🎉' : '💪'}</div>
   <h1>{t(great ? 'excellent' : 'goodEffort', $lang)}, {$authStore.user?.username}!</h1>
 
-  <ScoreRing {score} />
+  <ScoreRing {score} {total} />
 
   {#if badgeEarned}
     <div class="badge-banner">
@@ -47,8 +49,8 @@
   {:else}
     <div class="encouragement">
       <div class="enc-bar-wrap">
-        <div class="enc-bar"><div class="enc-fill" style="width:{(score / 15) * 100}%"></div></div>
-        <span>{score} / 15</span>
+        <div class="enc-bar"><div class="enc-fill" style="width:{(score / badgeThreshold) * 100}%"></div></div>
+        <span>{score} / {badgeThreshold}</span>
       </div>
       <p>{toEarnBadge} {t('needForBadge', $lang)}</p>
     </div>

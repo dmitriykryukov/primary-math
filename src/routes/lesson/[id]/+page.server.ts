@@ -26,6 +26,8 @@ export const load: PageServerLoad = async ({ params }) => {
 
   if (!lesson) throw error(404, 'Lesson not found');
 
-  const questions = generateQuestions(lesson, 20);
+  const isMathFact = lesson.topic.startsWith('mult_') || lesson.topic.startsWith('div_');
+  const questionCount = isMathFact ? 50 : 20;
+  const questions = generateQuestions(lesson, questionCount);
   return { lesson, questions };
 };

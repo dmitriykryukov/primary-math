@@ -67,6 +67,9 @@
 
   async function finishLesson() {
     const score = data.questions.filter(q => answers[q.id]?.trim() === q.correct_answer.trim()).length;
+    const total = data.questions.length;
+    const badgeThreshold = Math.round(total * 0.75);
+    const earnedBadge = score >= badgeThreshold;
     const user = $authStore.user!;
 
     await Promise.all([
@@ -79,15 +82,14 @@
       updateStreak(user.id)
     ]);
 
-    // Award badge if score >= 15; use explicit conflict target to avoid duplicate inserts on retry
-    if (score >= 15) {
+    if (earnedBadge) {
       await supabase.from('badges').upsert(
         { student_id: user.id, lesson_id: data.lesson.id, earned_at: new Date().toISOString() },
         { onConflict: 'student_id,lesson_id', ignoreDuplicates: true }
       );
     }
 
-    goto(`/lesson/${data.lesson.id}/score?score=${score}&badge=${score >= 15}`);
+    goto(`/lesson/${data.lesson.id}/score?score=${score}&total=${total}&badge=${earnedBadge}`);
   }
 
   async function updateStreak(studentId: string) {
