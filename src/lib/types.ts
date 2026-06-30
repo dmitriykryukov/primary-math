@@ -37,6 +37,7 @@ export interface StudentProgress {
   lesson_id: number;
   completed_at: string;
   score: number;
+  total: number;
   answers: Record<string, string>; // question_id → student_answer
 }
 

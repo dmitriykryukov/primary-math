@@ -16,6 +16,7 @@
   let skipped = $state(new Set<number>());
   let correct = $state(new Set<number>());
   let wrong = $state(new Set<number>());
+  let saveError = $state('');
 
   let q = $derived(data.questions[current]);
   let isTyped = $derived(q?.type === 'typed');
@@ -72,15 +73,21 @@
     const earnedBadge = score >= badgeThreshold;
     const user = $authStore.user!;
 
-    await Promise.all([
+    const [progressRes] = await Promise.all([
       supabase.from('student_progress').insert({
         student_id: user.id,
         lesson_id: data.lesson.id,
         score,
+        total,
         answers
       }),
       updateStreak(user.id)
     ]);
+
+    if (progressRes.error) {
+      saveError = progressRes.error.message;
+      return;
+    }
 
     if (earnedBadge) {
       await supabase.from('badges').upsert(
@@ -175,6 +182,10 @@
   {/if}
 
   <button class="skip-btn" onclick={skip}>{t('skip', $lang)}</button>
+
+  {#if saveError}
+    <div class="save-error">⚠️ {saveError}</div>
+  {/if}
 </div>
 
 <style>
@@ -226,5 +237,10 @@
   .skip-btn {
     background: none; border: none; color: var(--muted);
     text-decoration: underline; font-size: 13px; min-height: 36px; cursor: pointer;
+  }
+  .save-error {
+    background: rgba(229,57,53,0.1); color: var(--danger);
+    border-radius: var(--radius); padding: 10px 14px; font-size: 13px; font-weight: 600;
+    text-align: center;
   }
 </style>

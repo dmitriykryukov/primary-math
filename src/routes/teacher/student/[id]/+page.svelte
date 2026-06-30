@@ -57,12 +57,14 @@
     <div class="lesson-list">
       {#each lessons as lesson}
         {@const attempts = getProgress(lesson.id)}
-        {@const best = attempts.length ? Math.max(...attempts.map(a => a.score)) : null}
+        {@const best = attempts.length ? attempts.reduce((b, a) => a.score > b.score ? a : b) : null}
+        {@const bestPct = best ? Math.round(best.score / (best.total ?? 20) * 100) : 0}
+        {@const badgePct = 75}
         <div class="lesson-row" class:completed={attempts.length > 0}>
           <span class="lesson-num">{lesson.order_index}</span>
           <span class="lesson-title">{$lang === 'en' ? lesson.title_en : lesson.title_fr}</span>
           {#if best !== null}
-            <span class="best-score" style="color:{best >= 15 ? 'var(--success)' : best >= 10 ? 'var(--warn)' : 'var(--danger)'}">{best}/20{best >= 15 ? ' 🏅' : ''}</span>
+            <span class="best-score" style="color:{bestPct >= badgePct ? 'var(--success)' : bestPct >= 50 ? 'var(--warn)' : 'var(--danger)'}">{best.score}/{best.total ?? 20}{bestPct >= badgePct ? ' 🏅' : ''}</span>
             <span class="attempts">{attempts.length}×</span>
           {:else}
             <span class="not-done" style="color:var(--muted)">—</span>

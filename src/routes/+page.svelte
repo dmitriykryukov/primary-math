@@ -1,44 +1,43 @@
 <script lang="ts">
-  import { t, lang, setLang } from '$lib/i18n/index';
-  import { login, authStore } from '$lib/stores/auth';
-  import { goto } from '$app/navigation';
+  import { t, lang, setLang } from "$lib/i18n/index"
+  import { login, authStore } from "$lib/stores/auth"
+  import { goto } from "$app/navigation"
 
-  let username = $state('');
-  let password = $state('');
-  let error = $state('');
-  let loading = $state(false);
-  let showPassword = $state(false);
+  let username = $state("")
+  let password = $state("")
+  let error = $state("")
+  let loading = $state(false)
+  let showPassword = $state(false)
 
   $effect(() => {
-    if ($authStore.user) redirectByRole($authStore.user.role);
-  });
+    if (!$authStore.loading && $authStore.user) redirectByRole($authStore.user.role)
+  })
 
   function redirectByRole(role: string) {
-    if (role === 'student') goto('/dashboard');
-    else if (role === 'admin') goto('/admin');
-    else goto('/teacher');
+    if (role === "student") goto("/dashboard")
+    else if (role === "admin") goto("/admin")
+    else goto("/teacher")
   }
 
   async function handleSubmit(e: SubmitEvent) {
-    e.preventDefault();
-    error = '';
-    loading = true;
+    e.preventDefault()
+    error = ""
+    loading = true
     try {
-      await login(username, password);
-      redirectByRole($authStore.user!.role);
+      await login(username, password)
+      redirectByRole($authStore.user!.role)
     } catch {
-      error = t('invalidCredentials', $lang);
+      error = t("invalidCredentials", $lang)
     } finally {
-      loading = false;
+      loading = false
     }
   }
 </script>
 
 <div class="page">
-
   <!-- Language toggle -->
-  <button class="lang-btn" onclick={() => setLang($lang === 'en' ? 'fr' : 'en')}>
-    {$lang === 'en' ? 'FR' : 'EN'}
+  <button class="lang-btn" onclick={() => setLang($lang === "en" ? "fr" : "en")}>
+    {$lang === "en" ? "FR" : "EN"}
   </button>
 
   <!-- Floating math decorations -->
@@ -68,61 +67,43 @@
       <span class="l-purple"> Primaire</span>
     </div>
     <div class="subtitle-pill">
-      {$lang === 'en' ? 'Learning Online' : 'Apprentissage en ligne'}
+      {$lang === "en" ? "Learning Online" : "Apprentissage en ligne"}
     </div>
 
     <!-- Form -->
     <form onsubmit={handleSubmit}>
       <div class="field">
         <span class="field-icon">👤</span>
-        <input
-          type="text"
-          bind:value={username}
-          placeholder={t('username', $lang)}
-          autocomplete="username"
-          required
-        />
+        <input type="text" bind:value={username} placeholder={t("username", $lang)} autocomplete="username" required />
       </div>
       <div class="field">
         <span class="field-icon">🔒</span>
-        <input
-          type={showPassword ? 'text' : 'password'}
-          bind:value={password}
-          placeholder={t('password', $lang)}
-          autocomplete="current-password"
-          required
-        />
-        <button
-          type="button"
-          class="eye-btn"
-          onclick={() => showPassword = !showPassword}
-          aria-label="Toggle password visibility"
-        >
-          {showPassword ? '👁' : '🙈'}
+        <input type={showPassword ? "text" : "password"} bind:value={password} placeholder={t("password", $lang)} autocomplete="current-password" required />
+        <button type="button" class="eye-btn" onclick={() => (showPassword = !showPassword)} aria-label="Toggle password visibility">
+          {showPassword ? "👁" : "🙈"}
         </button>
       </div>
       {#if error}<p class="error">{error}</p>{/if}
       <button type="submit" class="btn-login" disabled={loading}>
-        {loading ? '…' : t('login', $lang)}
+        {loading ? "…" : t("login", $lang)}
       </button>
     </form>
 
     <!-- Tagline -->
     <p class="tagline">
-      {$lang === 'en'
-        ? 'Learn • Have Fun • Succeed'
-        : 'Apprendre • S\'amuser • Réussir'}
+      {$lang === "en" ? "Learn • Have Fun • Succeed" : "Apprendre • S'amuser • Réussir"}
     </p>
   </div>
-
 </div>
 
 <style>
-  :global(body) { background: #5bb8f5; }
+  /* :global(body) {
+    background: #005bbd;
+  } */
 
   .page {
     min-height: 100dvh;
-    background: linear-gradient(180deg, #5bb8f5 0%, #87CEEB 55%, #7BC67E 80%, #4CAF50 100%);
+    background: linear-gradient(180deg, #0177c5 0%, #0392ca 55%, #4cb950 80%, #37c539 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -136,19 +117,21 @@
     position: absolute;
     top: 16px;
     right: 16px;
-    background: rgba(255,255,255,0.9);
+    background: rgba(255, 255, 255, 0.9);
     border: none;
     border-radius: 999px;
     padding: 6px 16px;
     font-size: 13px;
     font-weight: 800;
-    color: #4361EE;
+    color: #4361ee;
     cursor: pointer;
     z-index: 10;
     min-height: 36px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
-  .lang-btn:hover { background: white; }
+  .lang-btn:hover {
+    background: white;
+  }
 
   /* Floating decorations */
   .deco {
@@ -158,11 +141,16 @@
     opacity: 0.85;
     animation: float 3s ease-in-out infinite;
     pointer-events: none;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
   @keyframes float {
-    0%, 100% { transform: translateY(0px) rotate(-3deg); }
-    50%       { transform: translateY(-14px) rotate(3deg); }
+    0%,
+    100% {
+      transform: translateY(0px) rotate(-3deg);
+    }
+    50% {
+      transform: translateY(-14px) rotate(3deg);
+    }
   }
 
   /* Clouds */
@@ -175,14 +163,25 @@
     opacity: 0.8;
     pointer-events: none;
   }
-  .cloud::before, .cloud::after {
-    content: '';
+  .cloud::before,
+  .cloud::after {
+    content: "";
     position: absolute;
     background: white;
     border-radius: 50%;
   }
-  .cloud::before { width: 60px; height: 60px; top: -24px; left: 20px; }
-  .cloud::after  { width: 44px; height: 44px; top: -18px; right: 22px; }
+  .cloud::before {
+    width: 60px;
+    height: 60px;
+    top: -24px;
+    left: 20px;
+  }
+  .cloud::after {
+    width: 44px;
+    height: 44px;
+    top: -18px;
+    right: 22px;
+  }
 
   /* Characters */
   .char {
@@ -191,10 +190,14 @@
     bottom: 0;
     line-height: 1;
     pointer-events: none;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
   }
-  .char-left  { left: 4%; }
-  .char-right { right: 4%; }
+  .char-left {
+    left: 4%;
+  }
+  .char-right {
+    right: 4%;
+  }
 
   /* Login card */
   .card {
@@ -203,7 +206,7 @@
     padding: 32px 28px 24px;
     width: 100%;
     max-width: 360px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
     text-align: center;
     position: relative;
     z-index: 5;
@@ -217,15 +220,25 @@
     margin-bottom: 8px;
     letter-spacing: -1px;
   }
-  .l-blue   { color: #4361EE; }
-  .l-orange { color: #FF9800; }
-  .l-green  { color: #4CAF50; }
-  .l-pink   { color: #E91E8C; }
-  .l-purple { color: #1a237e; }
+  .l-blue {
+    color: #4361ee;
+  }
+  .l-orange {
+    color: #ff9800;
+  }
+  .l-green {
+    color: #4caf50;
+  }
+  .l-pink {
+    color: #e91e8c;
+  }
+  .l-purple {
+    color: #1a237e;
+  }
 
   .subtitle-pill {
     display: inline-block;
-    background: linear-gradient(135deg, #4361EE, #4CC9F0);
+    background: linear-gradient(135deg, #4361ee, #4cc9f0);
     color: white;
     border-radius: 999px;
     padding: 5px 20px;
@@ -235,7 +248,11 @@
   }
 
   /* Form */
-  form { display: flex; flex-direction: column; gap: 12px; }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
 
   .field {
     position: relative;
@@ -260,8 +277,13 @@
     box-sizing: border-box;
     min-height: 48px;
   }
-  .field input:focus { border-color: #4361EE; background: white; }
-  .field input::placeholder { color: #aaa; }
+  .field input:focus {
+    border-color: #4361ee;
+    background: white;
+  }
+  .field input::placeholder {
+    color: #aaa;
+  }
 
   .eye-btn {
     position: absolute;
@@ -275,7 +297,7 @@
   }
 
   .btn-login {
-    background: linear-gradient(135deg, #4361EE, #4CC9F0);
+    background: linear-gradient(135deg, #4361ee, #4cc9f0);
     color: white;
     border: none;
     border-radius: 999px;
@@ -284,15 +306,20 @@
     font-weight: 800;
     min-height: 52px;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(67,97,238,0.4);
+    box-shadow: 0 4px 16px rgba(67, 97, 238, 0.4);
     transition: opacity 0.15s;
     margin-top: 4px;
   }
-  .btn-login:hover { opacity: 0.9; }
-  .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-login:hover {
+    opacity: 0.9;
+  }
+  .btn-login:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 
   .error {
-    color: #E53935;
+    color: #e53935;
     font-size: 13px;
     margin: 0;
     font-weight: 600;
@@ -302,13 +329,17 @@
     margin: 20px 0 0;
     font-size: 13px;
     font-weight: 700;
-    color: #4361EE;
+    color: #4361ee;
     letter-spacing: 0.5px;
   }
 
   /* Hide characters on small screens */
   @media (max-width: 640px) {
-    .char { display: none; }
-    .deco { font-size: 28px; }
+    .char {
+      display: none;
+    }
+    .deco {
+      font-size: 28px;
+    }
   }
 </style>

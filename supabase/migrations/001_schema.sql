@@ -25,7 +25,8 @@ create table public.student_progress (
   student_id   uuid not null references public.users(id) on delete cascade,
   lesson_id    int  not null references public.lessons(id),
   completed_at timestamptz not null default now(),
-  score        int  not null check (score between 0 and 20),
+  score        int  not null check (score between 0 and 100),
+  total        int  not null default 20,
   answers      jsonb not null default '{}'
 );
 
